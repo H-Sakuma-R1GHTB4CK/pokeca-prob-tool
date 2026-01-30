@@ -21,7 +21,7 @@ type ChartProps = {
 };
 
 const COLORS = ['#2563eb', '#0ea5e9', '#14b8a6', '#10b981'];
-const ANIMATION_MS = 400;
+const ANIMATION_MS = 600;
 
 const PercentLabel = ({ x, y, value, payload }: any) => {
   if (!payload || payload.a % 5 !== 0) {
