@@ -7,6 +7,12 @@ type ControlsProps = {
   onTargetChange: (value: number) => void;
   mode: DisplayMode;
   onModeChange: (mode: DisplayMode) => void;
+  maxDeck: number;
+  onMaxDeckChange: (value: number) => void;
+};
+
+const clamp = (value: number, min: number, max: number) => {
+  return Math.min(Math.max(value, min), max);
 };
 
 const Controls = ({
@@ -16,33 +22,66 @@ const Controls = ({
   onTargetChange,
   mode,
   onModeChange,
+  maxDeck,
+  onMaxDeckChange,
 }: ControlsProps) => {
+  const minDraw = 1;
+  const maxDraw = 15;
+  const minDeck = 1;
+  const maxAllowed = 60;
+
+  const handleDraw = (next: number) => {
+    onDrawChange(clamp(next, minDraw, maxDraw));
+  };
+
+  const handleMaxDeck = (next: number) => {
+    onMaxDeckChange(clamp(next, minDeck, maxAllowed));
+  };
+
   return (
     <section className="controls">
       <div className="control-card">
         <h2>入力</h2>
 
-        <label className="control">
+        <div className="control">
           <span className="control-title">ドロー枚数 d</span>
+          <div className="stepper-row">
+            <button
+              type="button"
+              className="stepper"
+              onClick={() => handleDraw(draw - 1)}
+              aria-label="ドロー枚数を減らす"
+            >
+              −
+            </button>
+            <span className="value-pill">{draw}枚</span>
+            <button
+              type="button"
+              className="stepper"
+              onClick={() => handleDraw(draw + 1)}
+              aria-label="ドロー枚数を増やす"
+            >
+              ＋
+            </button>
+            <span className="helper">範囲: {minDraw}〜{maxDraw}</span>
+          </div>
+        </div>
+
+        <label className="control">
+          <span className="control-title">最大山札枚数 a</span>
           <div className="control-row">
             <input
               type="range"
-              min={1}
-              max={15}
+              min={minDeck}
+              max={maxAllowed}
               step={1}
-              value={draw}
-              onChange={(event) => onDrawChange(Number(event.target.value))}
+              value={maxDeck}
+              onChange={(event) => handleMaxDeck(Number(event.target.value))}
             />
-            <span className="value-pill">{draw}枚</span>
+            <span className="value-pill">{maxDeck}枚</span>
           </div>
+          <span className="helper">範囲: {minDeck}〜{maxAllowed}</span>
         </label>
-
-        <div className="control">
-          <span className="control-title">山札枚数 a</span>
-          <div className="control-row">
-            <div className="fixed-pill">d〜60 を描画（最大60固定）</div>
-          </div>
-        </div>
 
         <div className="control">
           <span className="control-title">山札のターゲット枚数 t</span>

@@ -18,10 +18,11 @@ type ChartProps = {
   draw: number;
   target: number;
   mode: DisplayMode;
+  maxDeck: number;
 };
 
 const COLORS = ['#2563eb', '#0ea5e9', '#14b8a6', '#10b981'];
-const ANIMATION_MS = 600;
+const ANIMATION_MS = 400;
 
 const PercentLabel = ({ x, y, value, payload }: any) => {
   if (!payload || payload.a % 5 !== 0) {
@@ -58,7 +59,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-const ProbabilityChart = ({ data, draw, target, mode }: ChartProps) => {
+const ProbabilityChart = ({ data, draw, target, mode, maxDeck }: ChartProps) => {
   const lines = Array.from({ length: target + 1 }, (_, index) => index);
 
   return (
@@ -67,15 +68,12 @@ const ProbabilityChart = ({ data, draw, target, mode }: ChartProps) => {
         <h2>確率グラフ</h2>
         <div className="chart-wrapper">
           <ResponsiveContainer width="100%" height={420}>
-            <LineChart
-              data={data}
-              margin={{ top: 20, right: 24, left: 4, bottom: 8 }}
-            >
+            <LineChart data={data} margin={{ top: 20, right: 24, left: 4, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis
                 dataKey="a"
                 type="number"
-                domain={[draw, 60]}
+                domain={[draw, maxDeck]}
                 tickCount={10}
                 tickFormatter={(value) => `${value}`}
                 tick={{ fill: '#475569' }}
