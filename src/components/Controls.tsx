@@ -1,8 +1,9 @@
 ﻿export type DisplayMode = 'exact' | 'atleast' | 'both';
 
-type Target = {
+export type Target = {
   id: string;
   count: number;
+  need: number;
 };
 
 type ControlsProps = {
@@ -55,20 +56,35 @@ const Controls = ({
   };
 
   const handleTargetCount = (index: number, next: number) => {
-    const updated = targets.map((item, i) =>
-      i === index ? { ...item, count: clamp(next, targetMin, targetMax) } : item
-    );
+    const updated = targets.map((item, i) => {
+      if (i !== index) {
+        return item;
+      }
+      const count = clamp(next, targetMin, targetMax);
+      return { ...item, count, need: Math.min(item.need, count) };
+    });
+    onTargetsChange(updated);
+  };
+
+  const handleTargetNeed = (index: number, next: number) => {
+    const updated = targets.map((item, i) => {
+      if (i !== index) {
+        return item;
+      }
+      const need = clamp(next, targetMin, item.count);
+      return { ...item, need };
+    });
     onTargetsChange(updated);
   };
 
   const addTarget = () => {
     const id = nextTargetId(targets.length);
-    onTargetsChange([...targets, { id, count: 1 }]);
+    onTargetsChange([...targets, { id, count: 1, need: 1 }]);
   };
 
   const removeTarget = (index: number) => {
     const updated = targets.filter((_, i) => i !== index);
-    onTargetsChange(updated.length === 0 ? [{ id: 'A', count: 1 }] : updated);
+    onTargetsChange(updated.length === 0 ? [{ id: 'A', count: 1, need: 1 }] : updated);
   };
 
   return (
@@ -132,24 +148,53 @@ const Controls = ({
                     削除
                   </button>
                 </div>
-                <div className="stepper-row compact">
-                  <button
-                    type="button"
-                    className="stepper"
-                    onClick={() => handleTargetCount(index, target.count - 1)}
-                    aria-label={`カード${target.id}枚数を減らす`}
-                  >
-                    −
-                  </button>
-                  <span className="value-pill">{target.count}枚</span>
-                  <button
-                    type="button"
-                    className="stepper"
-                    onClick={() => handleTargetCount(index, target.count + 1)}
-                    aria-label={`カード${target.id}枚数を増やす`}
-                  >
-                    ＋
-                  </button>
+                <div className="target-values">
+                  <div className="target-field">
+                    <span className="target-caption">山札枚数</span>
+                    <div className="stepper-row compact">
+                      <button
+                        type="button"
+                        className="stepper"
+                        onClick={() => handleTargetCount(index, target.count - 1)}
+                        aria-label={`カード${target.id}枚数を減らす`}
+                      >
+                        −
+                      </button>
+                      <span className="value-pill">{target.count}枚</span>
+                      <button
+                        type="button"
+                        className="stepper"
+                        onClick={() => handleTargetCount(index, target.count + 1)}
+                        aria-label={`カード${target.id}枚数を増やす`}
+                      >
+                        ＋
+                      </button>
+                    </div>
+                  </div>
+                  {isMultiTarget && (
+                    <div className="target-field">
+                      <span className="target-caption">必要枚数 (≥)</span>
+                      <div className="stepper-row compact">
+                        <button
+                          type="button"
+                          className="stepper"
+                          onClick={() => handleTargetNeed(index, target.need - 1)}
+                          aria-label={`カード${target.id}必要枚数を減らす`}
+                        >
+                          −
+                        </button>
+                        <span className="value-pill">{target.need}枚</span>
+                        <button
+                          type="button"
+                          className="stepper"
+                          onClick={() => handleTargetNeed(index, target.need + 1)}
+                          aria-label={`カード${target.id}必要枚数を増やす`}
+                        >
+                          ＋
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -158,6 +203,7 @@ const Controls = ({
             ターゲットを追加
           </button>
           <span className="helper">合計がaを超えると確率は0になります。</span>
+          {isMultiTarget && <span className="helper">複数ターゲット時は「必要枚数(≥)」を使って判定します。</span>}
         </div>
 
         <div className="control">
@@ -181,7 +227,7 @@ const Controls = ({
               </button>
             ))}
           </div>
-          {isMultiTarget && <span className="helper">複数ターゲット時は「それ以上」のみ表示します。</span>}
+          {isMultiTarget && <span className="helper">複数ターゲット時は単一ラインのみ表示します。</span>}
         </div>
       </div>
     </section>
