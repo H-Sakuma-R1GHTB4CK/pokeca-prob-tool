@@ -45,9 +45,32 @@ body {
   font-weight: 600;
 }
 
+.mode-panel {
+  margin-bottom: 16px;
+}
+
+.mode-card {
+  background: white;
+  border-radius: 18px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.mode-card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.chart-column {
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 
@@ -155,17 +178,6 @@ input[type='range'] {
   flex-direction: column;
   gap: 6px;
   align-items: flex-start;
-}
-
-.target-name-input {
-  width: 100%;
-  max-width: 140px;
-  border: 1px solid #cbd5f5;
-  border-radius: 10px;
-  padding: 6px 8px;
-  font-weight: 600;
-  color: #334155;
-  background: white;
 }
 
 .target-label {

@@ -247,27 +247,6 @@ const Controls = ({
             <span className="helper">詳細表示は組み合わせの線が増えます。</span>
           </div>
         )}
-
-        <div className="control">
-          <span className="control-title">表示モード</span>
-          <div className="segmented">
-            {[
-              { value: 'exact', label: 'ちょうど' },
-              { value: 'atleast', label: 'それ以上' },
-              { value: 'both', label: '両方' },
-            ].map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                className={`segment ${mode === item.value ? 'active' : ''}`}
-                onClick={() => onModeChange(item.value as DisplayMode)}
-                aria-pressed={mode === item.value}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

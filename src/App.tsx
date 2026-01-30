@@ -123,16 +123,40 @@ const App = () => {
           multiMode={multiMode}
           onMultiModeChange={setMultiMode}
         />
-        <ProbabilityChart
-          data={rows}
-          draw={draw}
-          targets={targets}
-          mode={mode}
-          maxDeck={maxDeck}
-          multiMode={multiMode}
-          exactCombos={exactCombos}
-          atleastCombos={atleastCombos}
-        />
+        <div className="chart-column">
+          <section className="mode-panel">
+            <div className="mode-card">
+              <h2>表示モード</h2>
+              <div className="segmented">
+                {[
+                  { value: 'exact', label: 'ちょうど' },
+                  { value: 'atleast', label: 'それ以上' },
+                  { value: 'both', label: '両方' },
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    className={`segment ${mode === item.value ? 'active' : ''}`}
+                    onClick={() => setMode(item.value as DisplayMode)}
+                    aria-pressed={mode === item.value}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+          <ProbabilityChart
+            data={rows}
+            draw={draw}
+            targets={targets}
+            mode={mode}
+            maxDeck={maxDeck}
+            multiMode={multiMode}
+            exactCombos={exactCombos}
+            atleastCombos={atleastCombos}
+          />
+        </div>
       </div>
     </div>
   );
