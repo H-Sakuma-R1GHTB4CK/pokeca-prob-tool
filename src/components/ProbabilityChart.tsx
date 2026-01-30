@@ -11,7 +11,7 @@ import {
   LabelList,
 } from 'recharts';
 import { formatPercent, formatPercentInt } from '../lib/format';
-import { DisplayMode, Target } from './Controls';
+import { DisplayMode, Target, MultiDisplayMode } from './Controls';
 
 type ChartProps = {
   data: Array<Record<string, number>>;
@@ -19,9 +19,12 @@ type ChartProps = {
   targets: Target[];
   mode: DisplayMode;
   maxDeck: number;
+  multiMode: MultiDisplayMode;
+  exactCombos: number[][];
+  atleastCombos: number[][];
 };
 
-const COLORS = ['#2563eb', '#0ea5e9', '#14b8a6', '#10b981'];
+const COLORS = ['#2563eb', '#0ea5e9', '#14b8a6', '#10b981', '#f97316', '#ec4899'];
 const ANIMATION_MS = 400;
 
 const PercentLabel = ({ x, y, value, payload }: any) => {
@@ -63,7 +66,26 @@ const buildConditionLabel = (targets: Target[]) => {
   return targets.map((t) => `${t.name}≥${t.need}`).join(', ');
 };
 
-const ProbabilityChart = ({ data, draw, targets, mode, maxDeck }: ChartProps) => {
+const buildComboLabel = (targets: Target[], combo: number[]) => {
+  return targets.map((t, index) => `${t.name}${combo[index]}枚`).join(', ');
+};
+
+const buildThresholdLabel = (targets: Target[], combo: number[]) => {
+  return targets.map((t, index) => `${t.name}≥${combo[index]}`).join(', ');
+};
+
+const comboKey = (prefix: string, values: number[]) => `${prefix}_${values.join('_')}`;
+
+const ProbabilityChart = ({
+  data,
+  draw,
+  targets,
+  mode,
+  maxDeck,
+  multiMode,
+  exactCombos,
+  atleastCombos,
+}: ChartProps) => {
   const isMultiTarget = targets.length > 1;
   const lineCount = (targets[0]?.count ?? 0) + 1;
   const lines = Array.from({ length: lineCount }, (_, index) => index);
@@ -95,20 +117,62 @@ const ProbabilityChart = ({ data, draw, targets, mode, maxDeck }: ChartProps) =>
               <Legend />
 
               {isMultiTarget ? (
-                <Line
-                  type="monotone"
-                  dataKey="all_targets"
-                  stroke={COLORS[0]}
-                  strokeDasharray="6 4"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                  name={multiLabel}
-                  isAnimationActive
-                  animationDuration={ANIMATION_MS}
-                >
-                  <LabelList dataKey="all_targets" content={<PercentLabel />} />
-                </Line>
+                <>
+                  {(mode === 'atleast' || mode === 'both') && (
+                    <Line
+                      type="monotone"
+                      dataKey="all_targets"
+                      stroke={COLORS[0]}
+                      strokeDasharray="6 4"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      activeDot={{ r: 5 }}
+                      name={multiLabel}
+                      isAnimationActive
+                      animationDuration={ANIMATION_MS}
+                    >
+                      <LabelList dataKey="all_targets" content={<PercentLabel />} />
+                    </Line>
+                  )}
+
+                  {(mode === 'atleast' || mode === 'both') &&
+                    multiMode === 'detailed' &&
+                    atleastCombos.map((combo, index) => (
+                      <Line
+                        key={comboKey('atleast', combo)}
+                        type="monotone"
+                        dataKey={comboKey('atleast', combo)}
+                        stroke={COLORS[(index + 1) % COLORS.length]}
+                        strokeDasharray="6 4"
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                        activeDot={{ r: 5 }}
+                        name={`それ以上: ${buildThresholdLabel(targets, combo)}`}
+                        isAnimationActive
+                        animationDuration={ANIMATION_MS}
+                      >
+                        <LabelList dataKey={comboKey('atleast', combo)} content={<PercentLabel />} />
+                      </Line>
+                    ))}
+
+                  {(mode === 'exact' || mode === 'both') &&
+                    exactCombos.map((combo, index) => (
+                      <Line
+                        key={comboKey('exact', combo)}
+                        type="monotone"
+                        dataKey={comboKey('exact', combo)}
+                        stroke={COLORS[(index + 1) % COLORS.length]}
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                        activeDot={{ r: 5 }}
+                        name={`ちょうど: ${buildComboLabel(targets, combo)}`}
+                        isAnimationActive
+                        animationDuration={ANIMATION_MS}
+                      >
+                        <LabelList dataKey={comboKey('exact', combo)} content={<PercentLabel />} />
+                      </Line>
+                    ))}
+                </>
               ) : (
                 lines.map((k) => {
                   const color = COLORS[k % COLORS.length];

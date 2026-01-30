@@ -1,13 +1,59 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import Controls, { DisplayMode, Target } from './components/Controls';
+import Controls, { DisplayMode, Target, MultiDisplayMode } from './components/Controls';
 import ProbabilityChart from './components/ProbabilityChart';
-import { atLeast, pmf, probAtLeastTargets } from './lib/hypergeom';
+import { atLeast, pmf, probAtLeastTargets, jointPmf } from './lib/hypergeom';
 
 const DEFAULT_MAX_DECK = 53;
 
-const buildData = (draw: number, targets: Target[], maxDeck: number) => {
+const buildCombos = (ranges: number[][]) => {
+  if (ranges.length === 0) {
+    return [] as number[][];
+  }
+
+  const combos: number[][] = [];
+  const walk = (index: number, current: number[]) => {
+    if (index === ranges.length) {
+      combos.push([...current]);
+      return;
+    }
+
+    for (const value of ranges[index]) {
+      current.push(value);
+      walk(index + 1, current);
+      current.pop();
+    }
+  };
+
+  walk(0, []);
+  return combos;
+};
+
+const comboKey = (prefix: string, values: number[]) => `${prefix}_${values.join('_')}`;
+
+const buildData = (
+  draw: number,
+  targets: Target[],
+  maxDeck: number,
+  multiMode: MultiDisplayMode
+) => {
   const rows: Array<Record<string, number>> = [];
   const upper = Math.max(draw, maxDeck);
+
+  const isMulti = targets.length > 1;
+  const exactRanges = targets.map((target) => {
+    const min = multiMode === 'simple' ? target.need : 0;
+    const max = target.count;
+    if (min > max) {
+      return [] as number[];
+    }
+    return Array.from({ length: max - min + 1 }, (_, index) => index + min);
+  });
+  const exactCombos = isMulti ? buildCombos(exactRanges) : [];
+
+  const atleastRanges = targets.map((target) =>
+    Array.from({ length: target.need + 1 }, (_, index) => index)
+  );
+  const atleastCombos = isMulti && multiMode === 'detailed' ? buildCombos(atleastRanges) : [];
 
   for (let a = draw; a <= upper; a += 1) {
     const row: Record<string, number> = { a } as Record<string, number>;
@@ -20,12 +66,18 @@ const buildData = (draw: number, targets: Target[], maxDeck: number) => {
       }
     } else {
       row.all_targets = probAtLeastTargets(a, draw, targets);
+      exactCombos.forEach((combo) => {
+        row[comboKey('exact', combo)] = jointPmf(a, draw, targets, combo);
+      });
+      atleastCombos.forEach((combo) => {
+        row[comboKey('atleast', combo)] = probAtLeastTargets(a, draw, targets, combo);
+      });
     }
 
     rows.push(row);
   }
 
-  return rows;
+  return { rows, exactCombos, atleastCombos };
 };
 
 const App = () => {
@@ -34,6 +86,7 @@ const App = () => {
     { id: 'A', name: 'カード A', count: 3, need: 1 },
   ]);
   const [mode, setMode] = useState<DisplayMode>('both');
+  const [multiMode, setMultiMode] = useState<MultiDisplayMode>('simple');
   const [maxDeck, setMaxDeck] = useState(DEFAULT_MAX_DECK);
 
   useEffect(() => {
@@ -42,13 +95,10 @@ const App = () => {
     }
   }, [draw, maxDeck]);
 
-  useEffect(() => {
-    if (targets.length > 1 && mode !== 'atleast') {
-      setMode('atleast');
-    }
-  }, [targets.length, mode]);
-
-  const data = useMemo(() => buildData(draw, targets, maxDeck), [draw, targets, maxDeck]);
+  const { rows, exactCombos, atleastCombos } = useMemo(
+    () => buildData(draw, targets, maxDeck, multiMode),
+    [draw, targets, maxDeck, multiMode]
+  );
 
   return (
     <div className="app">
@@ -70,13 +120,18 @@ const App = () => {
           onModeChange={setMode}
           maxDeck={maxDeck}
           onMaxDeckChange={setMaxDeck}
+          multiMode={multiMode}
+          onMultiModeChange={setMultiMode}
         />
         <ProbabilityChart
-          data={data}
+          data={rows}
           draw={draw}
           targets={targets}
           mode={mode}
           maxDeck={maxDeck}
+          multiMode={multiMode}
+          exactCombos={exactCombos}
+          atleastCombos={atleastCombos}
         />
       </div>
     </div>

@@ -55,7 +55,12 @@ type TargetNeed = {
   need: number;
 };
 
-export const probAtLeastTargets = (a: number, d: number, targets: TargetNeed[]): number => {
+export const probAtLeastTargets = (
+  a: number,
+  d: number,
+  targets: TargetNeed[],
+  overrides?: number[]
+): number => {
   if (a < d) {
     return 0;
   }
@@ -64,11 +69,17 @@ export const probAtLeastTargets = (a: number, d: number, targets: TargetNeed[]):
     return 0;
   }
 
-  if (targets.some((t) => t.need > t.count)) {
+  if (overrides && overrides.length !== targets.length) {
     return 0;
   }
 
-  const minNeeded = targets.reduce((sum, t) => sum + t.need, 0);
+  const needs = overrides ?? targets.map((t) => t.need);
+
+  if (targets.some((t, index) => needs[index] > t.count)) {
+    return 0;
+  }
+
+  const minNeeded = needs.reduce((sum, need) => sum + need, 0);
   if (d < minNeeded) {
     return 0;
   }
@@ -87,15 +98,16 @@ export const probAtLeastTargets = (a: number, d: number, targets: TargetNeed[]):
   const dp: bigint[] = Array(d + 1).fill(0n);
   dp[0] = 1n;
 
-  targets.forEach((target) => {
+  targets.forEach((target, index) => {
     const next: bigint[] = Array(d + 1).fill(0n);
     const maxPick = Math.min(target.count, d);
+    const need = needs[index];
 
     for (let picked = 0; picked <= d; picked += 1) {
       if (dp[picked] === 0n) {
         continue;
       }
-      for (let x = target.need; x <= maxPick && picked + x <= d; x += 1) {
+      for (let x = need; x <= maxPick && picked + x <= d; x += 1) {
         next[picked + x] += dp[picked] * combBigInt(target.count, x);
       }
     }
@@ -117,4 +129,50 @@ export const probAtLeastTargets = (a: number, d: number, targets: TargetNeed[]):
 
   const value = Number(numerator) / Number(denominator);
   return Math.min(Math.max(value, 0), 1);
+};
+
+export const jointPmf = (a: number, d: number, targets: TargetNeed[], picks: number[]): number => {
+  if (a < d) {
+    return 0;
+  }
+
+  if (targets.length === 0 || targets.length !== picks.length) {
+    return 0;
+  }
+
+  let product = 1n;
+  let pickedSum = 0;
+  let targetSum = 0;
+
+  for (let i = 0; i < targets.length; i += 1) {
+    const count = targets[i].count;
+    const pick = picks[i];
+
+    if (pick < 0 || pick > count) {
+      return 0;
+    }
+
+    product *= combBigInt(count, pick);
+    pickedSum += pick;
+    targetSum += count;
+  }
+
+  if (pickedSum > d) {
+    return 0;
+  }
+
+  const rest = a - targetSum;
+  if (rest < 0) {
+    return 0;
+  }
+
+  const remaining = d - pickedSum;
+  const restWays = remaining <= rest ? combBigInt(rest, remaining) : 0n;
+  const denominator = combBigInt(a, d);
+  if (denominator === 0n) {
+    return 0;
+  }
+
+  const numerator = product * restWays;
+  return Number(numerator) / Number(denominator);
 };

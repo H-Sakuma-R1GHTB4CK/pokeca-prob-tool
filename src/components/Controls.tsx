@@ -1,4 +1,5 @@
 ﻿export type DisplayMode = 'exact' | 'atleast' | 'both';
+export type MultiDisplayMode = 'simple' | 'detailed';
 
 export type Target = {
   id: string;
@@ -16,6 +17,8 @@ type ControlsProps = {
   onModeChange: (mode: DisplayMode) => void;
   maxDeck: number;
   onMaxDeckChange: (value: number) => void;
+  multiMode: MultiDisplayMode;
+  onMultiModeChange: (mode: MultiDisplayMode) => void;
 };
 
 const clamp = (value: number, min: number, max: number) => {
@@ -39,6 +42,8 @@ const Controls = ({
   onModeChange,
   maxDeck,
   onMaxDeckChange,
+  multiMode,
+  onMultiModeChange,
 }: ControlsProps) => {
   const minDraw = 1;
   const maxDraw = 15;
@@ -67,11 +72,6 @@ const Controls = ({
     onTargetsChange(updated);
   };
 
-  const handleTargetName = (index: number, next: string) => {
-    const updated = targets.map((item, i) => (i === index ? { ...item, name: next } : item));
-    onTargetsChange(updated);
-  };
-
   const handleTargetNeed = (index: number, next: number) => {
     const updated = targets.map((item, i) => {
       if (i !== index) {
@@ -80,6 +80,11 @@ const Controls = ({
       const need = clamp(next, targetMin, item.count);
       return { ...item, need };
     });
+    onTargetsChange(updated);
+  };
+
+  const handleTargetName = (index: number, next: string) => {
+    const updated = targets.map((item, i) => (i === index ? { ...item, name: next } : item));
     onTargetsChange(updated);
   };
 
@@ -220,9 +225,32 @@ const Controls = ({
           {isMultiTarget && <span className="helper">複数ターゲット時は「必要枚数(≥)」を使って判定します。</span>}
         </div>
 
+        {isMultiTarget && (
+          <div className="control">
+            <span className="control-title">複数ターゲット表示</span>
+            <div className="segmented">
+              {[
+                { value: 'simple', label: '簡易表示' },
+                { value: 'detailed', label: '詳細表示' },
+              ].map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`segment ${multiMode === item.value ? 'active' : ''}`}
+                  onClick={() => onMultiModeChange(item.value as MultiDisplayMode)}
+                  aria-pressed={multiMode === item.value}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <span className="helper">詳細表示は組み合わせの線が増えます。</span>
+          </div>
+        )}
+
         <div className="control">
           <span className="control-title">表示モード</span>
-          <div className={`segmented ${isMultiTarget ? 'locked' : ''}`}>
+          <div className="segmented">
             {[
               { value: 'exact', label: 'ちょうど' },
               { value: 'atleast', label: 'それ以上' },
@@ -234,14 +262,11 @@ const Controls = ({
                 className={`segment ${mode === item.value ? 'active' : ''}`}
                 onClick={() => onModeChange(item.value as DisplayMode)}
                 aria-pressed={mode === item.value}
-                disabled={isMultiTarget}
-                title={isMultiTarget ? '複数ターゲット時は「それ以上」のみ' : undefined}
               >
                 {item.label}
               </button>
             ))}
           </div>
-          {isMultiTarget && <span className="helper">複数ターゲット時は単一ラインのみ表示します。</span>}
         </div>
       </div>
     </section>
