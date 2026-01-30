@@ -34,6 +34,27 @@ npm run build
 ## 生成物
 - `dist/` に出力されます。
 
+## GitHub Pages で公開
+このリポジトリは `pokeca-prob-tool` なので、公開URLは以下になります。
+
+```
+https://h-sakuma-r1ghtb4ck.github.io/pokeca-prob-tool/
+```
+
+### 1) GitHub Pages を有効化
+リポジトリの **Settings → Pages** で、**Source を GitHub Actions** に設定してください。
+
+### 2) 反映
+以下のコマンドで push すると、Actions がビルドして Pages にデプロイします。
+
+```bash
+git add .
+git commit -m "Configure GitHub Pages"
+git push
+```
+
+> 初回は数分かかることがあります。Actions の実行が完了したら上記URLにアクセスしてください。
+
 ## 実装の説明
 ### 主要ファイル
 - `src/App.tsx` : 画面全体の状態管理（ドロー枚数、ターゲット枚数、表示モード）
