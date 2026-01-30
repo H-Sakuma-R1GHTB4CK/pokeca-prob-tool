@@ -49,3 +49,40 @@ export const atLeast = (a: number, t: number, d: number, m: number): number => {
 
   return sum;
 };
+
+export const probAllAtLeastOne = (a: number, d: number, targets: number[]): number => {
+  if (a < d) {
+    return 0;
+  }
+
+  if (targets.length === 0) {
+    return 0;
+  }
+
+  const denominator = combBigInt(a, d);
+  if (denominator === 0n) {
+    return 0;
+  }
+
+  let total = 0;
+  const n = targets.length;
+
+  for (let mask = 0; mask < 1 << n; mask += 1) {
+    let sum = 0;
+    let bits = 0;
+
+    for (let i = 0; i < n; i += 1) {
+      if (mask & (1 << i)) {
+        sum += targets[i];
+        bits += 1;
+      }
+    }
+
+    const remaining = a - sum;
+    const numerator = remaining >= d ? combBigInt(remaining, d) : 0n;
+    const term = Number(numerator) / Number(denominator);
+    total += bits % 2 === 0 ? term : -term;
+  }
+
+  return Math.min(Math.max(total, 0), 1);
+};

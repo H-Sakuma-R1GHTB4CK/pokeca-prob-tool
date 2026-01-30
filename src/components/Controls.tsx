@@ -1,10 +1,15 @@
 ﻿export type DisplayMode = 'exact' | 'atleast' | 'both';
 
+type Target = {
+  id: string;
+  count: number;
+};
+
 type ControlsProps = {
   draw: number;
   onDrawChange: (value: number) => void;
-  target: number;
-  onTargetChange: (value: number) => void;
+  targets: Target[];
+  onTargetsChange: (value: Target[]) => void;
   mode: DisplayMode;
   onModeChange: (mode: DisplayMode) => void;
   maxDeck: number;
@@ -15,11 +20,19 @@ const clamp = (value: number, min: number, max: number) => {
   return Math.min(Math.max(value, min), max);
 };
 
+const nextTargetId = (index: number) => {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (index < alphabet.length) {
+    return alphabet[index];
+  }
+  return `T${index + 1}`;
+};
+
 const Controls = ({
   draw,
   onDrawChange,
-  target,
-  onTargetChange,
+  targets,
+  onTargetsChange,
   mode,
   onModeChange,
   maxDeck,
@@ -29,6 +42,9 @@ const Controls = ({
   const maxDraw = 15;
   const minDeck = 1;
   const maxAllowed = 60;
+  const targetMin = 1;
+  const targetMax = 60;
+  const isMultiTarget = targets.length > 1;
 
   const handleDraw = (next: number) => {
     onDrawChange(clamp(next, minDraw, maxDraw));
@@ -36,6 +52,23 @@ const Controls = ({
 
   const handleMaxDeck = (next: number) => {
     onMaxDeckChange(clamp(next, minDeck, maxAllowed));
+  };
+
+  const handleTargetCount = (index: number, next: number) => {
+    const updated = targets.map((item, i) =>
+      i === index ? { ...item, count: clamp(next, targetMin, targetMax) } : item
+    );
+    onTargetsChange(updated);
+  };
+
+  const addTarget = () => {
+    const id = nextTargetId(targets.length);
+    onTargetsChange([...targets, { id, count: 1 }]);
+  };
+
+  const removeTarget = (index: number) => {
+    const updated = targets.filter((_, i) => i !== index);
+    onTargetsChange(updated.length === 0 ? [{ id: 'A', count: 1 }] : updated);
   };
 
   return (
@@ -84,26 +117,52 @@ const Controls = ({
         </label>
 
         <div className="control">
-          <span className="control-title">山札のターゲット枚数 t</span>
-          <div className="radio-row">
-            {[1, 2, 3, 4].map((value) => (
-              <label key={value} className="radio-pill">
-                <input
-                  type="radio"
-                  name="target"
-                  value={value}
-                  checked={target === value}
-                  onChange={() => onTargetChange(value)}
-                />
-                <span>{value}枚</span>
-              </label>
+          <span className="control-title">山札のターゲット枚数</span>
+          <div className="target-list">
+            {targets.map((target, index) => (
+              <div key={target.id} className="target-row">
+                <div className="target-meta">
+                  <div className="target-label">カード {target.id}</div>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => removeTarget(index)}
+                    disabled={targets.length === 1}
+                  >
+                    削除
+                  </button>
+                </div>
+                <div className="stepper-row compact">
+                  <button
+                    type="button"
+                    className="stepper"
+                    onClick={() => handleTargetCount(index, target.count - 1)}
+                    aria-label={`カード${target.id}枚数を減らす`}
+                  >
+                    −
+                  </button>
+                  <span className="value-pill">{target.count}枚</span>
+                  <button
+                    type="button"
+                    className="stepper"
+                    onClick={() => handleTargetCount(index, target.count + 1)}
+                    aria-label={`カード${target.id}枚数を増やす`}
+                  >
+                    ＋
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
+          <button type="button" className="add-target" onClick={addTarget}>
+            ターゲットを追加
+          </button>
+          <span className="helper">合計がaを超えると確率は0になります。</span>
         </div>
 
         <div className="control">
           <span className="control-title">表示モード</span>
-          <div className="segmented">
+          <div className={`segmented ${isMultiTarget ? 'locked' : ''}`}>
             {[
               { value: 'exact', label: 'ちょうど' },
               { value: 'atleast', label: 'それ以上' },
@@ -115,11 +174,14 @@ const Controls = ({
                 className={`segment ${mode === item.value ? 'active' : ''}`}
                 onClick={() => onModeChange(item.value as DisplayMode)}
                 aria-pressed={mode === item.value}
+                disabled={isMultiTarget}
+                title={isMultiTarget ? '複数ターゲット時は「それ以上」のみ' : undefined}
               >
                 {item.label}
               </button>
             ))}
           </div>
+          {isMultiTarget && <span className="helper">複数ターゲット時は「それ以上」のみ表示します。</span>}
         </div>
       </div>
     </section>

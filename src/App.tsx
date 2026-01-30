@@ -1,21 +1,34 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import Controls, { DisplayMode } from './components/Controls';
 import ProbabilityChart from './components/ProbabilityChart';
-import { atLeast, pmf } from './lib/hypergeom';
+import { atLeast, pmf, probAllAtLeastOne } from './lib/hypergeom';
 
 const DEFAULT_MAX_DECK = 53;
 
-const buildData = (draw: number, target: number, maxDeck: number) => {
-  const rows: Array<Record<string, number>> = [];
+type Target = {
+  id: string;
+  count: number;
+};
 
+const buildData = (draw: number, targets: Target[], maxDeck: number) => {
+  const rows: Array<Record<string, number>> = [];
   const upper = Math.max(draw, maxDeck);
 
   for (let a = draw; a <= upper; a += 1) {
     const row: Record<string, number> = { a } as Record<string, number>;
 
-    for (let k = 0; k <= target; k += 1) {
-      row[`exact_${k}`] = pmf(a, target, draw, k);
-      row[`atleast_${k}`] = atLeast(a, target, draw, k);
+    if (targets.length === 1) {
+      const t = targets[0].count;
+      for (let k = 0; k <= t; k += 1) {
+        row[`exact_${k}`] = pmf(a, t, draw, k);
+        row[`atleast_${k}`] = atLeast(a, t, draw, k);
+      }
+    } else {
+      row.all_atleast_1 = probAllAtLeastOne(
+        a,
+        draw,
+        targets.map((item) => item.count)
+      );
     }
 
     rows.push(row);
@@ -26,7 +39,7 @@ const buildData = (draw: number, target: number, maxDeck: number) => {
 
 const App = () => {
   const [draw, setDraw] = useState(8);
-  const [target, setTarget] = useState(3);
+  const [targets, setTargets] = useState<Target[]>([{ id: 'A', count: 3 }]);
   const [mode, setMode] = useState<DisplayMode>('both');
   const [maxDeck, setMaxDeck] = useState(DEFAULT_MAX_DECK);
 
@@ -36,7 +49,13 @@ const App = () => {
     }
   }, [draw, maxDeck]);
 
-  const data = useMemo(() => buildData(draw, target, maxDeck), [draw, target, maxDeck]);
+  useEffect(() => {
+    if (targets.length > 1 && mode !== 'atleast') {
+      setMode('atleast');
+    }
+  }, [targets.length, mode]);
+
+  const data = useMemo(() => buildData(draw, targets, maxDeck), [draw, targets, maxDeck]);
 
   return (
     <div className="app">
@@ -52,8 +71,8 @@ const App = () => {
         <Controls
           draw={draw}
           onDrawChange={setDraw}
-          target={target}
-          onTargetChange={setTarget}
+          targets={targets}
+          onTargetsChange={setTargets}
           mode={mode}
           onModeChange={setMode}
           maxDeck={maxDeck}
@@ -62,7 +81,7 @@ const App = () => {
         <ProbabilityChart
           data={data}
           draw={draw}
-          target={target}
+          targets={targets}
           mode={mode}
           maxDeck={maxDeck}
         />

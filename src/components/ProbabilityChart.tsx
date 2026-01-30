@@ -13,10 +13,15 @@ import {
 import { formatPercent, formatPercentInt } from '../lib/format';
 import { DisplayMode } from './Controls';
 
+type Target = {
+  id: string;
+  count: number;
+};
+
 type ChartProps = {
   data: Array<Record<string, number>>;
   draw: number;
-  target: number;
+  targets: Target[];
   mode: DisplayMode;
   maxDeck: number;
 };
@@ -59,8 +64,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-const ProbabilityChart = ({ data, draw, target, mode, maxDeck }: ChartProps) => {
-  const lines = Array.from({ length: target + 1 }, (_, index) => index);
+const ProbabilityChart = ({ data, draw, targets, mode, maxDeck }: ChartProps) => {
+  const isMultiTarget = targets.length > 1;
+  const lineCount = (targets[0]?.count ?? 0) + 1;
+  const lines = Array.from({ length: lineCount }, (_, index) => index);
 
   return (
     <section className="chart">
@@ -87,48 +94,65 @@ const ProbabilityChart = ({ data, draw, target, mode, maxDeck }: ChartProps) => 
               <Tooltip content={<CustomTooltip />} />
               <Legend />
 
-              {lines.map((k) => {
-                const color = COLORS[k % COLORS.length];
-                const exactKey = `exact_${k}`;
-                const atleastKey = `atleast_${k}`;
+              {isMultiTarget ? (
+                <Line
+                  type="monotone"
+                  dataKey="all_atleast_1"
+                  stroke={COLORS[0]}
+                  strokeDasharray="6 4"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  name="全て1枚以上"
+                  isAnimationActive
+                  animationDuration={ANIMATION_MS}
+                >
+                  <LabelList dataKey="all_atleast_1" content={<PercentLabel />} />
+                </Line>
+              ) : (
+                lines.map((k) => {
+                  const color = COLORS[k % COLORS.length];
+                  const exactKey = `exact_${k}`;
+                  const atleastKey = `atleast_${k}`;
 
-                return (
-                  <Fragment key={k}>
-                    {(mode === 'exact' || mode === 'both') && (
-                      <Line
-                        type="monotone"
-                        dataKey={exactKey}
-                        stroke={color}
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                        activeDot={{ r: 5 }}
-                        name={`ちょうど ${k}枚`}
-                        isAnimationActive
-                        animationDuration={ANIMATION_MS}
-                      >
-                        <LabelList dataKey={exactKey} content={<PercentLabel />} />
-                      </Line>
-                    )}
+                  return (
+                    <Fragment key={k}>
+                      {(mode === 'exact' || mode === 'both') && (
+                        <Line
+                          type="monotone"
+                          dataKey={exactKey}
+                          stroke={color}
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          activeDot={{ r: 5 }}
+                          name={`ちょうど ${k}枚`}
+                          isAnimationActive
+                          animationDuration={ANIMATION_MS}
+                        >
+                          <LabelList dataKey={exactKey} content={<PercentLabel />} />
+                        </Line>
+                      )}
 
-                    {(mode === 'atleast' || mode === 'both') && (
-                      <Line
-                        type="monotone"
-                        dataKey={atleastKey}
-                        stroke={color}
-                        strokeDasharray="6 4"
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                        activeDot={{ r: 5 }}
-                        name={`${k}枚以上`}
-                        isAnimationActive
-                        animationDuration={ANIMATION_MS}
-                      >
-                        <LabelList dataKey={atleastKey} content={<PercentLabel />} />
-                      </Line>
-                    )}
-                  </Fragment>
-                );
-              })}
+                      {(mode === 'atleast' || mode === 'both') && (
+                        <Line
+                          type="monotone"
+                          dataKey={atleastKey}
+                          stroke={color}
+                          strokeDasharray="6 4"
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          activeDot={{ r: 5 }}
+                          name={`${k}枚以上`}
+                          isAnimationActive
+                          animationDuration={ANIMATION_MS}
+                        >
+                          <LabelList dataKey={atleastKey} content={<PercentLabel />} />
+                        </Line>
+                      )}
+                    </Fragment>
+                  );
+                })
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>
