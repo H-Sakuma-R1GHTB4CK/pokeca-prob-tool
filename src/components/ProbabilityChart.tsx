@@ -11,12 +11,7 @@ import {
   LabelList,
 } from 'recharts';
 import { formatPercent, formatPercentInt } from '../lib/format';
-import { DisplayMode } from './Controls';
-
-type Target = {
-  id: string;
-  count: number;
-};
+import { DisplayMode, Target } from './Controls';
 
 type ChartProps = {
   data: Array<Record<string, number>>;
@@ -64,10 +59,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+const buildConditionLabel = (targets: Target[]) => {
+  return targets.map((t) => `${t.name}≥${t.need}`).join(', ');
+};
+
 const ProbabilityChart = ({ data, draw, targets, mode, maxDeck }: ChartProps) => {
   const isMultiTarget = targets.length > 1;
   const lineCount = (targets[0]?.count ?? 0) + 1;
   const lines = Array.from({ length: lineCount }, (_, index) => index);
+  const multiLabel = `条件達成 (${buildConditionLabel(targets)})`;
 
   return (
     <section className="chart">
@@ -97,17 +97,17 @@ const ProbabilityChart = ({ data, draw, targets, mode, maxDeck }: ChartProps) =>
               {isMultiTarget ? (
                 <Line
                   type="monotone"
-                  dataKey="all_atleast_1"
+                  dataKey="all_targets"
                   stroke={COLORS[0]}
                   strokeDasharray="6 4"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
-                  name="全て1枚以上"
+                  name={multiLabel}
                   isAnimationActive
                   animationDuration={ANIMATION_MS}
                 >
-                  <LabelList dataKey="all_atleast_1" content={<PercentLabel />} />
+                  <LabelList dataKey="all_targets" content={<PercentLabel />} />
                 </Line>
               ) : (
                 lines.map((k) => {

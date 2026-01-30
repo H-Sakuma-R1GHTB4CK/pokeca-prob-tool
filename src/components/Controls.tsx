@@ -2,6 +2,7 @@
 
 export type Target = {
   id: string;
+  name: string;
   count: number;
   need: number;
 };
@@ -66,6 +67,11 @@ const Controls = ({
     onTargetsChange(updated);
   };
 
+  const handleTargetName = (index: number, next: string) => {
+    const updated = targets.map((item, i) => (i === index ? { ...item, name: next } : item));
+    onTargetsChange(updated);
+  };
+
   const handleTargetNeed = (index: number, next: number) => {
     const updated = targets.map((item, i) => {
       if (i !== index) {
@@ -79,12 +85,14 @@ const Controls = ({
 
   const addTarget = () => {
     const id = nextTargetId(targets.length);
-    onTargetsChange([...targets, { id, count: 1, need: 1 }]);
+    onTargetsChange([...targets, { id, name: `カード ${id}`, count: 1, need: 1 }]);
   };
 
   const removeTarget = (index: number) => {
     const updated = targets.filter((_, i) => i !== index);
-    onTargetsChange(updated.length === 0 ? [{ id: 'A', count: 1, need: 1 }] : updated);
+    onTargetsChange(
+      updated.length === 0 ? [{ id: 'A', name: 'カード A', count: 1, need: 1 }] : updated
+    );
   };
 
   return (
@@ -133,12 +141,18 @@ const Controls = ({
         </label>
 
         <div className="control">
-          <span className="control-title">山札のターゲット枚数</span>
+          <span className="control-title">山札内に存在するターゲットの枚数</span>
           <div className="target-list">
             {targets.map((target, index) => (
               <div key={target.id} className="target-row">
                 <div className="target-meta">
-                  <div className="target-label">カード {target.id}</div>
+                  <input
+                    type="text"
+                    className="target-name-input"
+                    value={target.name}
+                    onChange={(event) => handleTargetName(index, event.target.value)}
+                    aria-label={`カード${target.id}の名称`}
+                  />
                   <button
                     type="button"
                     className="ghost"
@@ -150,7 +164,7 @@ const Controls = ({
                 </div>
                 <div className="target-values">
                   <div className="target-field">
-                    <span className="target-caption">山札枚数</span>
+                    <span className="target-caption">山札内枚数</span>
                     <div className="stepper-row compact">
                       <button
                         type="button"

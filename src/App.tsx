@@ -1,14 +1,9 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import Controls, { DisplayMode } from './components/Controls';
+import Controls, { DisplayMode, Target } from './components/Controls';
 import ProbabilityChart from './components/ProbabilityChart';
-import { atLeast, pmf, probAllAtLeastOne } from './lib/hypergeom';
+import { atLeast, pmf, probAtLeastTargets } from './lib/hypergeom';
 
 const DEFAULT_MAX_DECK = 53;
-
-type Target = {
-  id: string;
-  count: number;
-};
 
 const buildData = (draw: number, targets: Target[], maxDeck: number) => {
   const rows: Array<Record<string, number>> = [];
@@ -24,11 +19,7 @@ const buildData = (draw: number, targets: Target[], maxDeck: number) => {
         row[`atleast_${k}`] = atLeast(a, t, draw, k);
       }
     } else {
-      row.all_atleast_1 = probAllAtLeastOne(
-        a,
-        draw,
-        targets.map((item) => item.count)
-      );
+      row.all_targets = probAtLeastTargets(a, draw, targets);
     }
 
     rows.push(row);
@@ -39,7 +30,9 @@ const buildData = (draw: number, targets: Target[], maxDeck: number) => {
 
 const App = () => {
   const [draw, setDraw] = useState(8);
-  const [targets, setTargets] = useState<Target[]>([{ id: 'A', count: 3 }]);
+  const [targets, setTargets] = useState<Target[]>([
+    { id: 'A', name: 'カード A', count: 3, need: 1 },
+  ]);
   const [mode, setMode] = useState<DisplayMode>('both');
   const [maxDeck, setMaxDeck] = useState(DEFAULT_MAX_DECK);
 

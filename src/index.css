@@ -47,8 +47,8 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 14px;
 }
 
 .control-card,
@@ -104,9 +104,9 @@ input[type='range'] {
 
 .value-pill,
 .fixed-pill {
-  min-width: 72px;
+  min-width: 56px;
   text-align: center;
-  padding: 6px 10px;
+  padding: 6px 6px;
   border-radius: 10px;
   background: #e0f2fe;
   color: #0c4a6e;
@@ -157,9 +157,36 @@ input[type='range'] {
   align-items: flex-start;
 }
 
+.target-name-input {
+  width: 100%;
+  max-width: 140px;
+  border: 1px solid #cbd5f5;
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-weight: 600;
+  color: #334155;
+  background: white;
+}
+
 .target-label {
   font-weight: 700;
   color: #334155;
+}
+
+.target-values {
+  display: grid;
+  gap: 10px;
+}
+
+.target-field {
+  display: grid;
+  gap: 6px;
+}
+
+.target-caption {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
 }
 
 .add-target {

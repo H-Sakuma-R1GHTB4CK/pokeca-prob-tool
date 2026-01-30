@@ -50,7 +50,12 @@ export const atLeast = (a: number, t: number, d: number, m: number): number => {
   return sum;
 };
 
-export const probAllAtLeastOne = (a: number, d: number, targets: number[]): number => {
+type TargetNeed = {
+  count: number;
+  need: number;
+};
+
+export const probAtLeastTargets = (a: number, d: number, targets: TargetNeed[]): number => {
   if (a < d) {
     return 0;
   }
@@ -59,30 +64,57 @@ export const probAllAtLeastOne = (a: number, d: number, targets: number[]): numb
     return 0;
   }
 
+  if (targets.some((t) => t.need > t.count)) {
+    return 0;
+  }
+
+  const minNeeded = targets.reduce((sum, t) => sum + t.need, 0);
+  if (d < minNeeded) {
+    return 0;
+  }
+
+  const totalTargets = targets.reduce((sum, t) => sum + t.count, 0);
+  if (totalTargets > a) {
+    return 0;
+  }
+
+  const rest = a - totalTargets;
   const denominator = combBigInt(a, d);
   if (denominator === 0n) {
     return 0;
   }
 
-  let total = 0;
-  const n = targets.length;
+  const dp: bigint[] = Array(d + 1).fill(0n);
+  dp[0] = 1n;
 
-  for (let mask = 0; mask < 1 << n; mask += 1) {
-    let sum = 0;
-    let bits = 0;
+  targets.forEach((target) => {
+    const next: bigint[] = Array(d + 1).fill(0n);
+    const maxPick = Math.min(target.count, d);
 
-    for (let i = 0; i < n; i += 1) {
-      if (mask & (1 << i)) {
-        sum += targets[i];
-        bits += 1;
+    for (let picked = 0; picked <= d; picked += 1) {
+      if (dp[picked] === 0n) {
+        continue;
+      }
+      for (let x = target.need; x <= maxPick && picked + x <= d; x += 1) {
+        next[picked + x] += dp[picked] * combBigInt(target.count, x);
       }
     }
 
-    const remaining = a - sum;
-    const numerator = remaining >= d ? combBigInt(remaining, d) : 0n;
-    const term = Number(numerator) / Number(denominator);
-    total += bits % 2 === 0 ? term : -term;
+    for (let i = 0; i <= d; i += 1) {
+      dp[i] = next[i];
+    }
+  });
+
+  let numerator = 0n;
+  for (let picked = 0; picked <= d; picked += 1) {
+    if (dp[picked] === 0n) {
+      continue;
+    }
+    const remaining = d - picked;
+    const ways = remaining <= rest ? combBigInt(rest, remaining) : 0n;
+    numerator += dp[picked] * ways;
   }
 
-  return Math.min(Math.max(total, 0), 1);
+  const value = Number(numerator) / Number(denominator);
+  return Math.min(Math.max(value, 0), 1);
 };
