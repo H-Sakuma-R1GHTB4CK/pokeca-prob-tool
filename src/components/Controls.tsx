@@ -225,28 +225,6 @@ const Controls = ({
           {isMultiTarget && <span className="helper">複数ターゲット時は「必要枚数(≥)」を使って判定します。</span>}
         </div>
 
-        {isMultiTarget && (
-          <div className="control">
-            <span className="control-title">複数ターゲット表示</span>
-            <div className="segmented">
-              {[
-                { value: 'simple', label: '簡易表示' },
-                { value: 'detailed', label: '詳細表示' },
-              ].map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  className={`segment ${multiMode === item.value ? 'active' : ''}`}
-                  onClick={() => onMultiModeChange(item.value as MultiDisplayMode)}
-                  aria-pressed={multiMode === item.value}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            <span className="helper">詳細表示は組み合わせの線が増えます。</span>
-          </div>
-        )}
       </div>
     </section>
   );

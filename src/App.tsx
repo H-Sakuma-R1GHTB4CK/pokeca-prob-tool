@@ -85,7 +85,7 @@ const App = () => {
   const [targets, setTargets] = useState<Target[]>([
     { id: 'A', name: 'カード A', count: 3, need: 1 },
   ]);
-  const [mode, setMode] = useState<DisplayMode>('both');
+  const [mode, setMode] = useState<DisplayMode>('atleast');
   const [multiMode, setMultiMode] = useState<MultiDisplayMode>('simple');
   const [maxDeck, setMaxDeck] = useState(DEFAULT_MAX_DECK);
 
@@ -144,6 +144,28 @@ const App = () => {
                   </button>
                 ))}
               </div>
+              {targets.length > 1 && (
+                <div className="multi-mode-block">
+                  <div className="multi-mode-title">複数ターゲット表示</div>
+                  <div className="segmented">
+                    {[
+                      { value: 'simple', label: '簡易表示' },
+                      { value: 'detailed', label: '詳細表示' },
+                    ].map((item) => (
+                      <button
+                        key={item.value}
+                        type="button"
+                        className={`segment ${multiMode === item.value ? 'active' : ''}`}
+                        onClick={() => setMultiMode(item.value as MultiDisplayMode)}
+                        aria-pressed={multiMode === item.value}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="helper">詳細表示は組み合わせの線が増えます。</div>
+                </div>
+              )}
             </div>
           </section>
           <ProbabilityChart
