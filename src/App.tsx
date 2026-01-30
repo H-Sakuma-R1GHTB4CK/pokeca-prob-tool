@@ -116,12 +116,8 @@ const App = () => {
           onDrawChange={setDraw}
           targets={targets}
           onTargetsChange={setTargets}
-          mode={mode}
-          onModeChange={setMode}
           maxDeck={maxDeck}
           onMaxDeckChange={setMaxDeck}
-          multiMode={multiMode}
-          onMultiModeChange={setMultiMode}
         />
         <div className="chart-column">
           <section className="mode-panel">

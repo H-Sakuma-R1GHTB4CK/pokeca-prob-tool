@@ -13,12 +13,8 @@ type ControlsProps = {
   onDrawChange: (value: number) => void;
   targets: Target[];
   onTargetsChange: (value: Target[]) => void;
-  mode: DisplayMode;
-  onModeChange: (mode: DisplayMode) => void;
   maxDeck: number;
   onMaxDeckChange: (value: number) => void;
-  multiMode: MultiDisplayMode;
-  onMultiModeChange: (mode: MultiDisplayMode) => void;
 };
 
 const clamp = (value: number, min: number, max: number) => {
@@ -38,12 +34,8 @@ const Controls = ({
   onDrawChange,
   targets,
   onTargetsChange,
-  mode,
-  onModeChange,
   maxDeck,
   onMaxDeckChange,
-  multiMode,
-  onMultiModeChange,
 }: ControlsProps) => {
   const minDraw = 1;
   const maxDraw = 15;
